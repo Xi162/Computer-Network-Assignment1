@@ -1,11 +1,12 @@
 import socketserver
 import sqlite3
 import json
+import datetime
 
-def insert_file_host(file, host):
+def insert_file_host(host, file):
     con = sqlite3.connect("server.db")
     cur = con.cursor()
-    cur.execute("INSERT INTO file_host VALUES (?, ?)", (file, host))
+    cur.execute("INSERT INTO file_host(host, file) VALUES (?, ?)", (host, file))
     con.commit()
     con.close()
     
@@ -18,21 +19,52 @@ def get_host(file):
     con.close()
     return res
 
+def delete_file_host(host, file):
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("DELETE file_host WHERE host=? AND file=?", (host,file))
+    res = res.fetchall()
+    res = list(map(lambda obj: obj[0], res))
+    con.close()
+    return res
+
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        req = str(self.request.recv(1024), 'ascii')
+        req = str(self.request.recv(1024), 'utf8')
         reqObj = json.loads(req)
+        response = None
         if reqObj["type"] == "publish":
-            insert_file_host(reqObj["filename"], self.client_address[0])
-            response = bytes("File {} has been recorded".format(reqObj["filename"]), 'utf8')
-            self.request.sendall(response)
+            try:
+                insert_file_host(self.client_address[0], reqObj["filename"])
+                response = {
+                    "code": 0,
+                    "data": "File {} has been recorded".format(reqObj["filename"])
+                }
+            except:
+                response = {
+                    "code": 1,
+                    "data": "Server Error"
+                }
         elif reqObj["type"] == "fetch":
-            response = json.dumps(get_host(reqObj["filename"]))
-            response = bytes(response, "utf8")
-            self.request.sendall(response)
+            try:
+                response = get_host(reqObj["filename"])
+                response = {
+                    "code": 0,
+                    "data": response
+                }
+            except:
+                response = {
+                    "code": 1,
+                    "data": "Server Error"
+                }
         else:
-            response = "Hello im listening"
-            self.request.sendall(response.encode())
+            response = {
+                "code": 2,
+                "data": "Bad request"
+            }
+        response = json.dumps(response)
+        response = bytes(response, 'utf8')
+        self.request.sendall(response)
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
