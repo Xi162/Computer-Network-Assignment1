@@ -64,6 +64,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             }
         response = json.dumps(response)
         response = bytes(response, 'utf8')
+        print(response)
         self.request.sendall(response)
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):

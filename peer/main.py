@@ -18,7 +18,7 @@ if os.path.exists("peer.db"):
     os.remove("peer.db")
 con = sqlite3.connect("peer.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)                                      
 cur = con.cursor()
-cur.execute("""CREATE TABLE file_path(
+cur.execute("""CREATE TABLE IF NOT EXISTS file_path(
             fname text,
             path text, 
             primary key (fname))""")
@@ -35,6 +35,7 @@ server_thread.daemon = True
 #create parser for the CLI
 parser = argparse.ArgumentParser()
 subparser = parser.add_subparsers()
+
 #fetch parser
 fetch_parser = subparser.add_parser("fetch", help="Fetch parser")
 fetch_parser.add_argument("fname", help="file name to fetch")
