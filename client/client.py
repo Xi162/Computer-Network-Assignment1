@@ -13,22 +13,22 @@ class Client:
         self.PEER_PORT = PEER_PORT
 
     def fetch_list(self):
-        file_list = ["final","sd2.png"]
+        file_list = ["final","sd.png"]
         return file_list
 
-    def download_file(self, selected_file, directory):
+    def download_file(self, selected_file, save_location):
         try: 
             if (selected_file == None or len(selected_file) <= 0):
                 raise Exception("File empty", "Please choose a file")
 
             ips = self.get_ips(selected_file)
-            self.load_file(ips, selected_file, directory)
+            self.load_file(ips, selected_file, save_location)
+
             messagebox.showinfo("Download", "Download succeeded.")
         except socket.error as e:
-            if (e.args[0] == 61):
-                messagebox.showerror("Server Error", "The server is down.")
-            else:
-                messagebox.showerror("Server Error", e.args[1])
+            messagebox.showerror("Server Error", e.args[1])
+        except IOError as e:
+            messagebox.showerror("Client Error", "Cannot write file to file path.")
         except Exception as e:
             print(e)
             if (len(e.args) > 1):
@@ -49,48 +49,54 @@ class Client:
         res = res.decode()
         res = json.loads(res)
         clientSocket.close()
-        return res["data"]
-    
-    def load_file(self, ips, filename, filepath):
+        if res["code"] == 0:
+            return res["data"]
+        raise Exception("Client Error", res["data"])
+
+    def load_file(self, ips, file_name, save_location):
         if ips == None:
             raise Exception("File not found", "Cannot find file in the system.")
 
         peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         req = {
             "type": "load",
-            "filename": filename
+            "filename": file_name
         }
 
-        self.create_folder(filepath)
-
         for ip in ips:
-            if os.path.exists(filepath + "/" + filename):
-                break
             peerSocket.connect((ip, self.PEER_PORT))
             reqJSON = json.dumps(req)
             peerSocket.sendall(bytes(reqJSON, "utf-8"))
-            res = peerSocket.recv(1024)
-            print(res)
-            # res = res.decode('utf-8')
-            # res = json.loads(res)
-            # if res['code'] == 0:
-            #     peerSocket.close()
-            #     with open(filepath + "/" + filename, "wb") as file:
-            #         file.write(base64.b64decode(res["data"].encode('utf-8')))
-            with io.BytesIO(base64.b64decode(res)) as bio:
-                bio.seek(0)
-                img_data = bio.read()
+            header = peerSocket.recv(1024).decode('utf-8')
+            header = json.loads(header) 
+            file_length = header["length"]
+            file_length = int(file_length)
 
-                # Save the image data to a file
-                with open(filepath + "/" + filename, "wb") as file:
-                    file.write(img_data)
+            if header['code'] == 0:
+                file_content=b''
 
-    def create_folder(self, file_path):
-        if(file_path == '.'):
-            return
-        
-        Path(file_path).mkdir(parents=True, exist_ok=True)
+                # For tracking purposes
+                current_file_length=0
+
+                with open(save_location, "wb") as file:
+                    file_stream = peerSocket.recv(1024)
+                    while file_stream:
+                        current_file_length += len(file_stream)
+                        file.write(file_stream)
+                        file_stream = peerSocket.recv(1024)
+                        print("Downloading " + str(current_file_length) + "/" + str (file_length) + "... ", flush=True)
+                    file.flush()
+
+                if os.path.getsize(save_location) < file_length:
+                    if os.path.exists(save_location):
+                        os.remove(save_location)
+                    raise Exception("Server Error", "Connection Interrupted.")
+
+                break
+
+        if not os.path.exists(save_location):
+            # TODO: Do something when no file exists
+            raise Exception()
 
     def shutdown(self):
         print("Shutting down")
-    

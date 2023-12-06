@@ -31,10 +31,13 @@ class DownloadScreen(tk.Frame):
 
         selected_file = self.file_listbox.get(selected_index)
 
-        directory = self.choose_folder()
+        # Choose file location and name to save
+        save_location = filedialog.asksaveasfilename(
+            title="Save file as",
+        )
 
-        self.controller.client.download_file(selected_file, directory)
-
-    def choose_folder(self): 
-        return filedialog.askdirectory()
+        if save_location:
+            self.controller.client.download_file(selected_file, save_location)
+        else:
+            print("Operation canceled by the user.")
     
