@@ -27,7 +27,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         req = str(self.request.recv(1024), 'ascii')
         reqObj = json.loads(req)
         if reqObj["type"] == "load":
-            print("LOAD")
             try:
                 filepath = read_file_path(reqObj["filename"])
                 print(reqObj["filename"],filepath)

@@ -13,8 +13,39 @@ class Client:
         self.PEER_PORT = PEER_PORT
 
     def fetch_list(self):
-        file_list = ["final","sd.png"]
-        return file_list
+        try:
+            file_list = []
+
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            req = {
+                "type": "list"
+            }
+
+            client_socket.connect((self.SERVER_HOST, self.SERVER_PORT))
+            reqJSON = json.dumps(req)
+            client_socket.sendall(bytes(reqJSON, "utf-8"))
+
+            received_bytes = client_socket.recv(1024)
+            resJSON = b''
+            while received_bytes:
+                resJSON += received_bytes
+                received_bytes = client_socket.recv(1024)
+
+            print(len(received_bytes))
+
+            resJSON = resJSON.decode('utf-8')
+            res = json.loads(resJSON)
+
+            client_socket.close()
+
+            return res["data"]
+        except socket.error as e:
+            messagebox.showerror("Server Error", e.args[1])
+        except Exception as e:
+            if (len(e.args) > 1):
+                messagebox.showerror(e.args[0], e.args[1])
+            else:
+                messagebox.showerror("Client Error", "Something went wrong, please try again!")
 
     def download_file(self, selected_file, save_location):
         try: 
@@ -57,17 +88,17 @@ class Client:
         if ips == None:
             raise Exception("File not found", "Cannot find file in the system.")
 
-        peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         req = {
             "type": "load",
             "filename": file_name
         }
 
         for ip in ips:
-            peerSocket.connect((ip, self.PEER_PORT))
+            client_socket.connect((ip, self.PEER_PORT))
             reqJSON = json.dumps(req)
-            peerSocket.sendall(bytes(reqJSON, "utf-8"))
-            header = peerSocket.recv(1024).decode('utf-8')
+            client_socket.sendall(bytes(reqJSON, "utf-8"))
+            header = client_socket.recv(1024).decode('utf-8')
             header = json.loads(header) 
             file_length = header["length"]
             file_length = int(file_length)
@@ -79,11 +110,11 @@ class Client:
                 current_file_length=0
 
                 with open(save_location, "wb") as file:
-                    file_stream = peerSocket.recv(1024)
+                    file_stream = client_socket.recv(1024)
                     while file_stream:
                         current_file_length += len(file_stream)
                         file.write(file_stream)
-                        file_stream = peerSocket.recv(1024)
+                        file_stream = client_socket.recv(1024)
                         print("Downloading " + str(current_file_length) + "/" + str (file_length) + "... ", flush=True)
                     file.flush()
 
@@ -94,9 +125,12 @@ class Client:
 
                 break
 
+        client_socket.close()
+
         if not os.path.exists(save_location):
             # TODO: Do something when no file exists
             raise Exception()
 
     def shutdown(self):
         print("Shutting down")
+

@@ -4,11 +4,11 @@ import mainServer
 import os
 
 #create and connect to sqlite database
-if os.path.exists("server.db"):
-    os.remove("server.db")
+# if os.path.exists("server.db"):
+#     os.remove("server.db")
 con = sqlite3.connect("server.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)                                      
 cur = con.cursor()
-cur.execute("""CREATE TABLE file_host(
+cur.execute("""CREATE TABLE IF NOT EXISTS file_host(
             host text, 
             file text, 
             primary key(host, file))""")

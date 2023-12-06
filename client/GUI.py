@@ -5,7 +5,7 @@ class GUI:
     def __init__(self, client):
         self.client = client
         self.root = tk.Tk()
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
     
     def start(self):
         self.root.title("Client")
@@ -26,5 +26,5 @@ class GUI:
     def show_screen(self, screen):
         screen.tkraise()
 
-    def on_close(self):
+    def close(self):
         self.root.destroy()

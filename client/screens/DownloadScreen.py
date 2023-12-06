@@ -22,6 +22,11 @@ class DownloadScreen(tk.Frame):
 
         self.grid(row=0,column=0,sticky=tk.NSEW)
 
+    def refresh(self):
+        """
+            TODO
+        """
+
     def download_file(self):
         selected_index = self.file_listbox.curselection()
 
