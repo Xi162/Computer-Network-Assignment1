@@ -11,7 +11,6 @@ def read_file_path(fname):
 
     res = cur.execute("SELECT * FROM file_path WHERE fname = ?", (fname,))
     path = res.fetchone()
-    print(path)
     con.close()
     if not path:
         raise FileNotFoundError("File is no longer on server")
@@ -29,7 +28,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         if reqObj["type"] == "load":
             try:
                 filepath = read_file_path(reqObj["filename"])
-                print(reqObj["filename"],filepath)
 
                 # Sent header
                 header = {
@@ -47,7 +45,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         self.request.sendall(file_bytes)
                         file_bytes = file.read(1024)
             except FileNotFoundError as e:
-                print(e)
+                print('Error: ', e)
                 response = {
                     "code": 1,
                     "data": e.args[0]

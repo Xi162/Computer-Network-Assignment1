@@ -10,14 +10,13 @@ def insert_repo(fname, path):
     con.commit()
     con.close()
 
-def publish(args):
-    print(args.lname, args.fname)
-    insert_repo(args.fname, args.lname)
+def publish(fname, path):
+    insert_repo(fname, path)
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientSocket.connect((constants.SERVER_IP, constants.SERVER_PORT))
     req = {
         "type": "publish",
-        "filename": args.fname
+        "filename": fname
     }
     reqJSON = json.dumps(req)
     clientSocket.sendall(bytes(reqJSON, "utf8"))
@@ -25,7 +24,6 @@ def publish(args):
     res = res.decode()
     res = json.loads(res)
     clientSocket.close()
-    print(res)
     if res["code"] == 1:
         raise RuntimeError(res["data"])
     elif res["code"] == 2:

@@ -8,54 +8,58 @@ import fetch
 import publish
 import constants
 import peerServer
+import socket
+from GUI import GUI
 
-#just to exit the program
-def prog_exit(args):
-    sys.exit(0)
+class Peer:
+    def __init__(self):
+        #create a local repo, which stores local path and fname
+        # if os.path.exists("peer.db"):
+        #     os.remove("peer.db")
+        con = sqlite3.connect("peer.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)                                      
+        cur = con.cursor()
+        cur.execute("""CREATE TABLE IF NOT EXISTS file_path(
+                    fname text,
+                    path text, 
+                    primary key (fname))""")
+        con.commit()
+        res = cur.execute("SELECT name FROM sqlite_master")
+        print(res.fetchall())
+        con.close()
 
-#create a local repo, which stores local path and fname
-# if os.path.exists("peer.db"):
-#     os.remove("peer.db")
-con = sqlite3.connect("peer.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)                                      
-cur = con.cursor()
-cur.execute("""CREATE TABLE IF NOT EXISTS file_path(
-            fname text,
-            path text, 
-            primary key (fname))""")
-con.commit()
-res = cur.execute("SELECT name FROM sqlite_master")
-print(res.fetchall())
-con.close()
+        #peer server for other peers get file
+        self.server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
+        server_thread = threading.Thread(target=self.server.serve_forever)
+        server_thread.daemon = True
 
-#peer server for other peers get file
-server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
-server_thread = threading.Thread(target=server.serve_forever)
-server_thread.daemon = True
+        server_thread.start()
 
-#create parser for the CLI
-parser = argparse.ArgumentParser()
-subparser = parser.add_subparsers()
+    def fetch(self, name):
+        fetch.fetch(fname)
 
-#fetch parser
-fetch_parser = subparser.add_parser("fetch", help="Fetch parser")
-fetch_parser.add_argument("fname", help="file name to fetch")
-fetch_parser.set_defaults(func=fetch.fetch)
+    def publish(self, fname, path):
+        try:
+            print("publishing", fname, path)
+            publish.publish(fname, path)
+        except socket.error as e:
+            print("[Server Error] ", e.args[1])
+            return []
+        except Exception as e:
+            print('[Client Error]', e.args[0])
+            
+            return []
 
-#publish parser
-publish_parser = subparser.add_parser("publish", help="Publish parser")
-publish_parser.add_argument("lname", help="path to the file")
-publish_parser.add_argument("fname", help="alias file name when published")
-publish_parser.set_defaults(func=publish.publish)
+    def fetch_local_list(self):
+        con = sqlite3.connect("peer.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)                                      
+        cur = con.cursor()
+        res = cur.execute("SELECT * FROM file_path")
+        return res.fetchall()
 
-#exit parser
-exit_parser = subparser.add_parser("exit", help="Exit the program")
-exit_parser.set_defaults(func=prog_exit)
+    def stop(self):
+        self.server.shutdown()
+        self.server.server_close()
 
 if __name__ == "__main__":
-    print("Peer server listen on port", constants.PEER_PORT)
-    server_thread.start()
-
-    while True:
-        user_input = input("> ")
-        args = parser.parse_args(user_input.split())
-        args.func(args)
+    peer = Peer()
+    gui = GUI(peer)
+    gui.start()

@@ -16,10 +16,11 @@ class RedirectedText:
     def flush(self):
         pass  # No need to flush for this example
 
-class DownloadScreen(tk.Frame):
+class MainScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        self.parent = parent
 
         self.list_container = tk.Frame(self)
         self.list_container.grid_columnconfigure(0,weight=1)
@@ -37,44 +38,51 @@ class DownloadScreen(tk.Frame):
         label = tk.Label(self, text="Choose a file", font=("Arial", 18))
         label.pack(pady=20,fill=tk.X)
 
-        download_button = tk.Button(self, text="Download", command=self.download_file)
+        download_button = tk.Button(self, text="Publish", command=self.open_popup)
         download_button.pack(pady=10, padx=10)
 
-        back_btn = tk.Button(self, text="Back", command=lambda: self.controller.show_screen("RetryScreen"))
-        back_btn.pack(pady=10, padx=10)
+        tk.Button(self, text="Refresh", command=lambda: self.fetch_local_list).pack(pady=10, padx=10)
 
     def start_screen(self):
-        self.fetch_list()
+        self.fetch_local_list()
 
-    def fetch_list(self):
+    def fetch_local_list(self):
         if self.file_listbox != None and self.file_listbox.size() > 0:
             self.file_listbox.delete(0, tk.END)
 
-        list_file = self.controller.client.fetch_list()
+        list_file = self.controller.client.fetch_local_list()
+        list_file = list_file == None and [] or list_file
 
-        if list_file == None or len(list_file) <= 0:
-            self.controller.show_screen("RetryScreen")
+        for (fname, location) in list_file:
+            self.file_listbox.insert(tk.END, fname + '\t' + location)
+
+    def publish(self, fname):
+        location = filedialog.askopenfilename()
+        if (location == None or location == ""):
+            self.popup.destroy()
             return
 
-        for file_name in list_file:
-            self.file_listbox.insert(tk.END, file_name)
+        self.controller.client.publish(fname, location)
+        self.popup.destroy()
+        self.fetch_local_list()
 
-    def download_file(self):
-        selected_index = self.file_listbox.curselection()
 
-        if not selected_index:
-            messagebox.showinfo("Error", "Please select a file to download.")
-            return
+    def open_popup(self):
+        self.popup = tk.Toplevel(self.parent)
+        self.popup.title("Publish file")
 
-        selected_file = self.file_listbox.get(selected_index)
+        label = tk.Label(self.popup, text="Enter file name:")
+        label.pack(pady=10)
 
-        # Choose file location and name to save
-        save_location = filedialog.asksaveasfilename(
-            title="Save file as",
-        )
+        entry = tk.Entry(self.popup)
+        entry.pack(pady=10)
 
-        if save_location:
-            self.controller.client.download_file(selected_file, save_location)
-        else:
-            print("Operation canceled by the user.")
-    
+        # Create a button to open a file and populate the text box
+        open_button = tk.Button(self.popup, text="Open File", command=lambda: self.publish(entry.get()))
+        open_button.pack(pady=10)
+
+        # Create a button to close the popup
+        close_button = tk.Button(self.popup, text="Close", command=self.popup.destroy)
+        close_button.pack(pady=10)
+
+

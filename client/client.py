@@ -1,4 +1,3 @@
-from tkinter import messagebox
 import socket
 import json
 import os
@@ -14,8 +13,6 @@ class Client:
 
     def fetch_list(self):
         try:
-            file_list = []
-
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             req = {
                 "type": "list"
@@ -31,8 +28,6 @@ class Client:
                 resJSON += received_bytes
                 received_bytes = client_socket.recv(1024)
 
-            print(len(received_bytes))
-
             resJSON = resJSON.decode('utf-8')
             res = json.loads(resJSON)
 
@@ -40,32 +35,24 @@ class Client:
 
             return res["data"]
         except socket.error as e:
-            messagebox.showerror("Server Error", e.args[1])
+            print("[Server Error] ", e.args[1])
+            return []
         except Exception as e:
-            if (len(e.args) > 1):
-                messagebox.showerror(e.args[0], e.args[1])
-            else:
-                messagebox.showerror("Client Error", "Something went wrong, please try again!")
+            print('[Client Error] ', *e.args)
 
     def download_file(self, selected_file, save_location):
         try: 
             if (selected_file == None or len(selected_file) <= 0):
-                raise Exception("File empty", "Please choose a file")
+                raise Exception("[File empty]", "Please choose a file")
 
             ips = self.get_ips(selected_file)
             self.load_file(ips, selected_file, save_location)
-
-            messagebox.showinfo("Download", "Download succeeded.")
         except socket.error as e:
-            messagebox.showerror("Server Error", e.args[1])
+            print("[Server Error]", e.args[1])
         except IOError as e:
-            messagebox.showerror("Client Error", "Cannot write file to file path.")
+            print("[Client Error]", "Cannot write file to file path.")
         except Exception as e:
-            print(e)
-            if (len(e.args) > 1):
-                messagebox.showerror(e.args[0], e.args[1])
-            else:
-                messagebox.showerror("Client Error", "Something went wrong, please try again!")
+            print('[Client Error] ', *e.args)
 
     def get_ips(self, filename):
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -95,15 +82,16 @@ class Client:
         }
 
         for ip in ips:
+            print(f"Downloading from {ip}")
             client_socket.connect((ip, self.PEER_PORT))
             reqJSON = json.dumps(req)
             client_socket.sendall(bytes(reqJSON, "utf-8"))
             header = client_socket.recv(1024).decode('utf-8')
             header = json.loads(header) 
-            file_length = header["length"]
-            file_length = int(file_length)
 
             if header['code'] == 0:
+                file_length = header["length"]
+                file_length = int(file_length)
                 file_content=b''
 
                 # For tracking purposes
@@ -115,22 +103,25 @@ class Client:
                         current_file_length += len(file_stream)
                         file.write(file_stream)
                         file_stream = client_socket.recv(1024)
-                        print("Downloading " + str(current_file_length) + "/" + str (file_length) + "... ", flush=True)
                     file.flush()
 
                 if os.path.getsize(save_location) < file_length:
                     if os.path.exists(save_location):
                         os.remove(save_location)
-                    raise Exception("Server Error", "Connection Interrupted.")
+                    print(f"Download failed (length = {current_file_length}/{file_length}) ")
+                    continue
+                
+                print(f"Download succeeded {file_name} (length = {current_file_length}/{file_length})")
 
                 break
+            else:
+                print(f"Download failed {ip}")
 
         client_socket.close()
 
         if not os.path.exists(save_location):
-            # TODO: Do something when no file exists
-            raise Exception()
+            raise Exception("Cannot find file in the system.")
 
     def shutdown(self):
-        print("Shutting down")
+        print("Shutting down...")
 
