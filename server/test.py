@@ -2,14 +2,14 @@ import socket as s
 import json
 import time
 
-HOST = "LAPTOP-SCMCQCF9"
+HOST = "192.168.1.6"
 PORT = 5124
 
 def send():
     clientSocket = s.socket(s.AF_INET, s.SOCK_STREAM)
     clientSocket.connect((HOST, PORT))
     req = {
-        "type": "heartbeat"
+        "type": "list"
     }
     reqJSON = json.dumps(req)
     clientSocket.sendall(bytes(reqJSON, "utf8"))

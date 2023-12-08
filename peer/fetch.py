@@ -20,7 +20,6 @@ def getAdd(filename):
     res = res.decode()
     res = json.loads(res)
     clientSocket.close()
-    print(res)
     return res["data"]
 
 def loadFile(ips, filename):
@@ -41,4 +40,4 @@ def loadFile(ips, filename):
         peerSocket.close()
         with open("./repo/" + filename, "w") as file:
             file.write(res["data"])
-    print(res)
+        print(res)

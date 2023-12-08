@@ -28,6 +28,16 @@ def delete_file_host(host, file):
     con.close()
     return res
 
+def list_files():
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("SELECT * FROM file_host")
+    res = res.fetchall()
+    res = set(map(lambda obj: obj[1], res))
+    res = list(res)
+    con.close()
+    return res
+
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         req = str(self.request.recv(1024), 'utf8')
@@ -45,6 +55,19 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     "code": 1,
                     "data": "Server Error"
                 }
+        elif reqObj["type"] == "list":
+            try:
+                files = list_files()
+                response = {
+                    "code": 0,
+                    "data": files
+                }
+            except:
+                response = {
+                    "code": 1,
+                    "data": "Server Error"
+                }
+
         elif reqObj["type"] == "fetch":
             try:
                 response = get_host(reqObj["filename"])
@@ -64,6 +87,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             }
         response = json.dumps(response)
         response = bytes(response, 'utf8')
+        print(response)
         self.request.sendall(response)
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
