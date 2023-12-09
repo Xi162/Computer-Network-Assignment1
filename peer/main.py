@@ -29,7 +29,8 @@ class Peer:
         con.close()
 
         #ping server for the main server to ping
-        self.agent_server_thread = threading.Thread(target=agent.agent)
+        self.close_event = threading.Event()
+        self.agent_server_thread = threading.Thread(target=agent.agent, args=(self.close_event,))
         self.agent_server_thread.daemon = True
         self.agent_server_thread.start()
 
@@ -63,6 +64,8 @@ class Peer:
     def stop(self):
         self.peer_server.shutdown()
         self.peer_server_thread.join()
+        self.close_event.set()
+        self.agent_server_thread.join()
 
 if __name__ == "__main__":
     peer = Peer()
