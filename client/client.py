@@ -13,7 +13,9 @@ class Client:
 
     def fetch_list(self):
         try:
+            print("Fetching list...")
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.settimeout(5)
             req = {
                 "type": "list"
             }
@@ -33,10 +35,10 @@ class Client:
 
             client_socket.close()
 
+            print("File list fetched.")
             return res["data"]
         except socket.error as e:
-            print("[Server Error] ", e.args[1])
-            return []
+            print("[Server Error] ", *e.args)
         except Exception as e:
             print('[Client Error] ', *e.args)
 
@@ -48,25 +50,26 @@ class Client:
             ips = self.get_ips(selected_file)
             self.load_file(ips, selected_file, save_location)
         except socket.error as e:
-            print("[Server Error]", e.args[1])
+            print("[Server Error]", *e.args)
         except IOError as e:
             print("[Client Error]", "Cannot write file to file path.")
         except Exception as e:
             print('[Client Error] ', *e.args)
 
     def get_ips(self, filename):
-        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clientSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.settimeout(5)
+        client_socket.connect((self.SERVER_HOST, self.SERVER_PORT))
         req = {
             "type": "fetch",
             "filename": filename
         }
         reqJSON = json.dumps(req)
-        clientSocket.sendall(bytes(reqJSON, "utf-8"))
-        res = clientSocket.recv(1024)
+        client_socket.sendall(bytes(reqJSON, "utf-8"))
+        res = client_socket.recv(1024)
         res = res.decode()
         res = json.loads(res)
-        clientSocket.close()
+        client_socket.close()
         if res["code"] == 0:
             return res["data"]
         raise Exception("Client Error", res["data"])
@@ -76,6 +79,7 @@ class Client:
             raise Exception("File not found", "Cannot find file in the system.")
 
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.settimeout(5)
         req = {
             "type": "load",
             "filename": file_name

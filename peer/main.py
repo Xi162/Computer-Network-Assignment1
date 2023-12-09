@@ -29,10 +29,10 @@ class Peer:
 
         #peer server for other peers get file
         self.server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
-        server_thread = threading.Thread(target=self.server.serve_forever)
-        server_thread.daemon = True
+        self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.daemon = True
 
-        server_thread.start()
+        self.server_thread.start()
 
     def fetch(self, name):
         fetch.fetch(fname)
@@ -42,10 +42,10 @@ class Peer:
             print("publishing", fname, path)
             publish.publish(fname, path)
         except socket.error as e:
-            print("[Server Error] ", e.args[1])
+            print("[Server Error] ", *e.args)
             return []
         except Exception as e:
-            print('[Client Error]', e.args[0])
+            print('[Client Error]', *e.args)
             
             return []
 
@@ -57,6 +57,7 @@ class Peer:
 
     def stop(self):
         self.server.shutdown()
+        self.server_thread.join()
         self.server.server_close()
 
 if __name__ == "__main__":
