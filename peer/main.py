@@ -61,9 +61,8 @@ class Peer:
         return res.fetchall()
 
     def stop(self):
-        self.agent_server_thread.join()
-        self.peer_server_thread.join()
         self.peer_server.shutdown()
+        self.peer_server_thread.join()
 
 if __name__ == "__main__":
     peer = Peer()

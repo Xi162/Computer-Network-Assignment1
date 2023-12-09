@@ -71,8 +71,8 @@ class Server:
             print('[Client Error]', *e.args)
 
     def stop(self):
-        self.server_thread.join()
         self.server.shutdown()
+        self.server_thread.join()
 
         if os.path.exists("server.db"):
             os.remove("server.db")
