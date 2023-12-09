@@ -8,6 +8,7 @@ import fetch
 import publish
 import constants
 import socket
+import peerServer
 from GUI import GUI
 import agent
 
