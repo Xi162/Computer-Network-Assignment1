@@ -55,6 +55,16 @@ def get_file_host(file, host):
     con.close()
     return res
 
+def get_peer_list():
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("SELECT host FROM file_host")
+    res = res.fetchall()
+    res = set(map(lambda obj: obj[0], res))
+    res = list(res)
+    con.close()
+    return res
+
 
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):

@@ -29,12 +29,14 @@ def agent():
         if mainServerAddress[0] == constants.SERVER_IP:
             message = json.loads(message.decode())
             if message["type"] == "ping":
+                print("Ping from server, count: ", get_fcount())
                 response = {
                     "type": "pong",
                     "fcount": get_fcount()
                 }
             elif message["type"] == "discover":
                 res = get_file_list()
+                print("Discovered from server", res)
                 response = {
                     "type": "discover",
                     "list": res

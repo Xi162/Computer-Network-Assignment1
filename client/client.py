@@ -84,6 +84,7 @@ class Client:
         for ip in ips:
             if os.path.exists(save_location):
                 os.remove(save_location)
+            print(f"Trying to download from {ip}")
             try:
                 client_socket.connect((ip, self.PEER_PORT))
                 reqJSON = json.dumps(req)
@@ -121,7 +122,8 @@ class Client:
 
                 client_socket.close()
                 return
-            except ConnectionError as e:
+            except (ConnectionError, TimeoutError, socket.error) as e:
+                print("here")
                 client_socket.close()
                 connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 connectionSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
@@ -133,20 +135,6 @@ class Client:
                 connectionSocket.sendall(bytes(reqJSON, "utf-8"))
                 connectionSocket.close()
                 print("[Peer error] ", *e.args)
-                print("Trying another peer...")
-            except TimeoutError as e:
-                client_socket.close()
-                timeoutSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                timeoutSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
-                req = {
-                    "type": "invalid_host",
-                    "host": ip
-                }
-                reqJSON = json.dumps(req)
-                timeoutSocket.sendall(bytes(reqJSON, "utf-8"))
-                timeoutSocket.close()
-                print("[Peer error] ", *e.args)
-                print("Trying another peer...")
             except FileNotFoundError as e:
                 client_socket.close()
                 fileNotFoundSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -160,10 +148,8 @@ class Client:
                 fileNotFoundSocket.sendall(bytes(reqJSON, "utf-8"))
                 fileNotFoundSocket.close()
                 print("[Peer error] ", *e.args)
-                print("Trying another peer...")
             except RuntimeError as e:
                 print("[Peer error] ", *e.args)
-                print("Trying another peer...")
         print("No peer available.")
 
     def shutdown(self):

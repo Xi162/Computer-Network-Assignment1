@@ -34,9 +34,9 @@ class Server:
 
         self.server_thread.start()
 
-    def fetch_local_list(self):
+    def fetch_peers(self):
         try:
-            list_file = mainServer.list_files()
+            list_file = mainServer.get_peer_list()
             if list_file == None:
                 return []
 
@@ -50,19 +50,19 @@ class Server:
         try:
             print("Ping: " + hostname)
             count = ping.ping_host(hostname)
-            print("Ping count: " + hostname + " " + str(count))
-            return True
+            print("Ping count: " + str(count))
+            return count
         except socket.error as e:
             print("[Server Error] ", *e.args)
-            return False
+            return -1
         except Exception as e:
             print('[Client Error]', *e.args)
-            return False 
+            return -1 
 
     def discover(self, hostname):
         try:
             print("Discover: " + hostname)
-            file_list = discover.discover(hostname)
+            file_list = discover.discover_host(hostname)
             print("Discover list: " + hostname + " " + str(file_list))
             return file_list
         except socket.error as e:

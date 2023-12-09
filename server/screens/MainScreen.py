@@ -38,32 +38,59 @@ class MainScreen(tk.Frame):
         # Print to log space
         sys.stdout = RedirectedText(self.log_space, sys.stdout)
 
-        label = tk.Label(self, text="Enter peer IP:", font=("Arial", 18))
+        label = tk.Label(self, text="Choose a peer", font=("Arial", 18))
         label.pack(pady=8,fill=tk.X)
-
-        self.hostname_input = tk.Entry(self, font=("Arial", 14))
-        self.hostname_input.pack(pady=8)
 
         button_container = tk.Frame(self)
         button_container.pack(pady=20,fill=tk.X)
 
-        tk.Button(button_container, text="Ping", command=lambda: self.controller.client.ping(self.hostname_input.get())).pack(pady=10, padx=10)
-        tk.Button(button_container, text="Discover", command=lambda: self.discover(self.hostname_input.get())).pack(pady=10, padx=10)
+        tk.Button(button_container, text="Ping", command=self.ping).pack(pady=10, padx=10)
+        tk.Button(button_container, text="Discover", command=self.discover).pack(pady=10, padx=10)
+        tk.Button(button_container, text="Refresh", command=self.fetch_peers).pack(pady=10, padx=10)
 
     def start_screen(self):
-        self.fetch_local_list()
+        self.fetch_peers()
 
-    def fetch_local_list(self):
+    def fetch_peers(self):
         if self.file_listbox != None and self.file_listbox.size() > 0:
             self.file_listbox.delete(0, tk.END)
 
-        list_file = self.controller.client.fetch_local_list()
+        list_file = self.controller.client.fetch_peers()
         list_file = list_file == None and [] or list_file
 
         for file in list_file:
             self.file_listbox.insert(tk.END, file)
 
-    def discover(self, hostname):
+    def ping(self):
+        selected_index = self.file_listbox.curselection()
+
+        if not selected_index:
+            return
+
+        hostname = self.file_listbox.get(selected_index) 
+
+        ping_count = self.controller.client.ping(hostname)
+
+        # Show popup
+        self.popup = tk.Toplevel(self.parent,padx=10,pady=10)
+        self.popup.geometry("400x300")
+        self.popup.title("Ping result of " + hostname)
+
+        if ping_count == None:
+            tk.Label(self.popup, text="Ping failed").pack(pady=10)
+        else:
+            tk.Label(self.popup, text="Ping count: " + str(ping_count)).pack(pady=10)
+
+        close_button = tk.Button(self.popup, text="Close", command=self.popup.destroy)
+        close_button.pack(pady=10)
+
+    def discover(self):
+        selected_index = self.file_listbox.curselection()
+        if not selected_index:
+            return
+
+        hostname = self.file_listbox.get(selected_index)
+
         list_file = self.controller.client.discover(hostname)
 
         # Show popup
