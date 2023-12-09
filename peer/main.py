@@ -7,9 +7,9 @@ import os
 import fetch
 import publish
 import constants
-import peerServer
 import socket
 from GUI import GUI
+import agent
 
 class Peer:
     def __init__(self):
@@ -27,12 +27,16 @@ class Peer:
         print(res.fetchall())
         con.close()
 
-        #peer server for other peers get file
-        self.server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
-        self.server_thread = threading.Thread(target=self.server.serve_forever)
-        self.server_thread.daemon = True
+        #ping server for the main server to ping
+        self.agent_server_thread = threading.Thread(target=agent.agent)
+        self.agent_server_thread.daemon = True
+        self.agent_server_thread.start()
 
-        self.server_thread.start()
+        #peer server for other peers get file
+        self.peer_server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
+        self.peer_server_thread = threading.Thread(target=self.peer_server.serve_forever)
+        self.peer_server_thread.daemon = True
+        self.peer_server_thread.start()
 
     def fetch(self, name):
         fetch.fetch(fname)
@@ -56,9 +60,9 @@ class Peer:
         return res.fetchall()
 
     def stop(self):
-        self.server.shutdown()
-        self.server_thread.join()
-        self.server.server_close()
+        self.agent_server_thread.join()
+        self.peer_server_thread.join()
+        self.peer_server.shutdown()
 
 if __name__ == "__main__":
     peer = Peer()

@@ -4,6 +4,11 @@ import mainServer
 import os
 import time
 from GUI import GUI
+import argparse
+import sys
+
+import ping
+import discover
 
 HOST, PORT = "", 5124
 class Server:
@@ -44,6 +49,8 @@ class Server:
     def ping(self, hostname):
         try:
             print("Ping: " + hostname)
+            count = ping.ping_host(hostname)
+            print("Ping count: " + hostname + " " + str(count))
             return True
         except socket.error as e:
             print("[Server Error] ", *e.args)
@@ -55,10 +62,9 @@ class Server:
     def discover(self, hostname):
         try:
             print("Discover: " + hostname)
-            return [
-                "file1",
-                "file2",
-            ]
+            file_list = discover.discover(hostname)
+            print("Discover list: " + hostname + " " + str(file_list))
+            return file_list
         except socket.error as e:
             print("[Server Error] ", *e.args)
         except Exception as e:

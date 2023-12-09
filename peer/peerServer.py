@@ -1,9 +1,7 @@
 import socketserver
-import base64
 import sqlite3
 import json
 import os
-import mimetypes
 
 def read_file_path(fname):
     con = sqlite3.connect("peer.db")
@@ -20,40 +18,49 @@ def read_file_path(fname):
         raise FileNotFoundError("File not found")
     else:
         return path[1]
+    
+def delete_file(fname):
+    con = sqlite3.connect("peer.db")
+    cur = con.cursor()
+
+    cur.execute("DELETE FROM file_path WHERE fname = ?", (fname,))
+    con.commit()
+    con.close()
 
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        req = str(self.request.recv(1024), 'ascii')
+        req = str(self.request.recv(1024), 'utf-8')
         reqObj = json.loads(req)
         if reqObj["type"] == "load":
             try:
-                filepath = read_file_path(reqObj["filename"])
+                filepath = read_file_path(reqObj["fname"])
 
-                # Sent header
-                header = {
+                with open(filepath, "r") as file:
+                    file_content = file.read(1024)
+                    
+                res = {
                     "code": 0,
-                    "type": mimetypes.guess_type(filepath),
-                    "length": os.path.getsize(filepath),
+                    "data": file_content
                 }
-                response = bytes(json.dumps(header), 'utf8')
+                response = bytes(json.dumps(res), 'utf-8')
                 self.request.sendall(response)
 
-                # Sent data streams
-                with open(filepath, "rb") as file:
-                    file_bytes = file.read(1024)
-                    while file_bytes:
-                        self.request.sendall(file_bytes)
-                        file_bytes = file.read(1024)
             except FileNotFoundError as e:
                 print('Error: ', e)
+                delete_file(reqObj["fname"])
                 response = {
                     "code": 1,
                     "data": e.args[0]
                 }
-                response = bytes(json.dumps(response), 'utf8')
+                response = bytes(json.dumps(response), 'utf-8')
                 self.request.sendall(response)
             except Exception as e:
-                print(e)
+                response = {
+                    "code": 2,
+                    "data": "Peer Error"
+                }
+                response = bytes(json.dumps(response), 'utf-8')
+                self.request.sendall(response)
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
