@@ -1,7 +1,7 @@
 from GUI import GUI
 from client import Client
 
-SERVER_IP =  "192.168.1.6"
+SERVER_IP =  "192.168.1.201"
 SERVER_PORT = 5124
 PEER_PORT = 8500
 

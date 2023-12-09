@@ -8,6 +8,7 @@ import fetch
 import publish
 import constants
 import peerServer
+import agent
 
 #just to exit the program
 def prog_exit(args):
@@ -27,10 +28,14 @@ res = cur.execute("SELECT name FROM sqlite_master")
 print(res.fetchall())
 con.close()
 
+#ping server for the main server to ping
+agent_server_thread = threading.Thread(target=agent.agent)
+agent_server_thread.daemon = True
+
 #peer server for other peers get file
-server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
-server_thread = threading.Thread(target=server.serve_forever)
-server_thread.daemon = True
+peer_server = peerServer.ThreadedTCPServer(("", constants.PEER_PORT), peerServer.ThreadedTCPRequestHandler)
+peer_server_thread = threading.Thread(target=peer_server.serve_forever)
+peer_server_thread.daemon = True
 
 #create parser for the CLI
 parser = argparse.ArgumentParser()
@@ -52,8 +57,9 @@ exit_parser = subparser.add_parser("exit", help="Exit the program")
 exit_parser.set_defaults(func=prog_exit)
 
 if __name__ == "__main__":
+    agent_server_thread.start()
+    peer_server_thread.start()
     print("Peer server listen on port", constants.PEER_PORT)
-    server_thread.start()
 
     while True:
         user_input = input("> ")

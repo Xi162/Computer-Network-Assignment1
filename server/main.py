@@ -2,6 +2,11 @@ import threading
 import sqlite3
 import mainServer
 import os
+import argparse
+import sys
+
+import ping
+import discover
 
 #create and connect to sqlite database
 # if os.path.exists("server.db"):
@@ -23,19 +28,39 @@ server = mainServer.ThreadedTCPServer((HOST, PORT), mainServer.ThreadedTCPReques
 server_thread = threading.Thread(target=server.serve_forever)
 server_thread.daemon = True
 
-if __name__ == "__main__":
-    print("Server listening on port", PORT)
-    server_thread.start()
-
-    user_input = input("> ")
-
-    if(user_input == "exit"): 
-        server.shutdown()
-        print("Server shutdown")
-        
-    server_thread.join()
+def prog_exit(args):
+    server.shutdown()
+    print("Server shutdown")
     if os.path.exists("server.db"):
         os.remove("server.db")
     else:
         print("The file does not exist")
     print("END")
+    sys.exit(0)
+
+#create parser for the CLI
+parser = argparse.ArgumentParser()
+subparser = parser.add_subparsers()
+
+#fetch parser
+fetch_parser = subparser.add_parser("ping", help="Ping check a host")
+fetch_parser.add_argument("host", help="host address to ping")
+fetch_parser.set_defaults(func=ping.ping_cmd)
+
+#publish parser
+publish_parser = subparser.add_parser("discover", help="Discover which files a host keeps")
+publish_parser.add_argument("host", help="host address to discover")
+publish_parser.set_defaults(func=discover.discover_cmd)
+
+#exit parser
+exit_parser = subparser.add_parser("exit", help="Exit the program")
+exit_parser.set_defaults(func=prog_exit)
+
+if __name__ == "__main__":
+    print("Server listening on port", PORT)
+    server_thread.start()
+    
+    while True:
+        user_input = input("> ")
+        args = parser.parse_args(user_input.split())
+        args.func(args)

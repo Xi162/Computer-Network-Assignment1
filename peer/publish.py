@@ -11,13 +11,11 @@ def insert_repo(fname, path):
     con.close()
 
 def publish(args):
-    print(args.lname, args.fname)
-    insert_repo(args.fname, args.lname)
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientSocket.connect((constants.SERVER_IP, constants.SERVER_PORT))
     req = {
         "type": "publish",
-        "filename": args.fname
+        "fname": args.fname
     }
     reqJSON = json.dumps(req)
     clientSocket.sendall(bytes(reqJSON, "utf8"))
@@ -26,8 +24,12 @@ def publish(args):
     res = json.loads(res)
     clientSocket.close()
     print(res)
+    if res["code"] == 0:
+        insert_repo(args.fname, args.lname)
+        
     if res["code"] == 1:
         raise RuntimeError(res["data"])
     elif res["code"] == 2:
         raise SyntaxError(res["data"])
-    return res
+    elif res["code"] == 3:
+        print("File exists, can not publish")
