@@ -6,7 +6,7 @@ import time
 from GUI import GUI
 import argparse
 import sys
-
+import socket
 import ping
 import discover
 

@@ -75,71 +75,94 @@ class Client:
         raise Exception("Client Error", res["data"])
 
     def load_file(self, ips, filename, save_location):
-        peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         req = {
             "type": "load",
             "fname": filename
         }
-        peerSocket.settimeout(1)
+        client_socket.settimeout(1)
         for ip in ips:
             if os.path.exists(save_location):
-                break
+                os.remove(save_location)
             try:
-                peerSocket.connect((ip, self.PEER_PORT))
+                client_socket.connect((ip, self.PEER_PORT))
                 reqJSON = json.dumps(req)
-                peerSocket.sendall(bytes(reqJSON, "utf-8"))
-                res = peerSocket.recv(1024)
-                res = res.decode()
-                res = json.loads(res)
-                peerSocket.close()
-                if res["code"] == 1:
-                    raise FileNotFoundError(res["data"])
-                elif res["code"] == 2:
-                    raise RuntimeError(res["data"])
-                elif res["code"] == 0:
-                    with open(save_location, "w") as file:
-                        file.write(res["data"])
+                client_socket.sendall(bytes(reqJSON, "utf-8"))
+                header = client_socket.recv(1024)
+                header = header.decode()
+                header = json.loads(header)
+                if header["code"] == 1:
+                    raise FileNotFoundError(header["data"])
+                elif header["code"] == 2:
+                    raise RuntimeError(header["data"])
+                elif header["code"] == 0:
+                    file_length = header["length"]
+                    file_length = int(file_length)
+                    file_content=b''
 
+                    # For tracking purposes
+                    current_file_length=0
+
+                    with open(save_location, "wb") as file:
+                        file_stream = client_socket.recv(1024)
+                        while file_stream:
+                            current_file_length += len(file_stream)
+                            file.write(file_stream)
+                            file_stream = client_socket.recv(1024)
+                        file.flush()
+
+                    if os.path.getsize(save_location) < file_length:
+                        if os.path.exists(save_location):
+                            os.remove(save_location)
+                        print(f"Download failed (length = {current_file_length}/{file_length}) ")
+                        continue
+
+                    print(f"Download succeeded {filename} (length = {current_file_length}/{file_length})")
+
+                client_socket.close()
                 return
             except ConnectionError as e:
-                clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                clientSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
+                client_socket.close()
+                connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                connectionSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
                 req = {
                     "type": "invalid_host",
                     "host": ip
                 }
                 reqJSON = json.dumps(req)
-                clientSocket.sendall(bytes(reqJSON, "utf-8"))
-                clientSocket.close()
-                print("[Peer error] " + ip)
+                connectionSocket.sendall(bytes(reqJSON, "utf-8"))
+                connectionSocket.close()
+                print("[Peer error] ", *e.args)
                 print("Trying another peer...")
             except TimeoutError as e:
-                clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                clientSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
+                client_socket.close()
+                timeoutSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                timeoutSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
                 req = {
                     "type": "invalid_host",
                     "host": ip
                 }
                 reqJSON = json.dumps(req)
-                clientSocket.sendall(bytes(reqJSON, "utf-8"))
-                clientSocket.close()
-                print("[Peer error] " + ip)
+                timeoutSocket.sendall(bytes(reqJSON, "utf-8"))
+                timeoutSocket.close()
+                print("[Peer error] ", *e.args)
                 print("Trying another peer...")
             except FileNotFoundError as e:
-                clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                clientSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
+                client_socket.close()
+                fileNotFoundSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                fileNotFoundSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
                 req = {
                     "type": "invalid_host_file",
                     "host": ip,
                     "fname": filename
                 }
                 reqJSON = json.dumps(req)
-                clientSocket.sendall(bytes(reqJSON, "utf-8"))
-                clientSocket.close()
-                print("[Peer error] " + ip)
+                fileNotFoundSocket.sendall(bytes(reqJSON, "utf-8"))
+                fileNotFoundSocket.close()
+                print("[Peer error] ", *e.args)
                 print("Trying another peer...")
             except RuntimeError as e:
-                print("[Peer error] " + ip)
+                print("[Peer error] ", *e.args)
                 print("Trying another peer...")
         print("No peer available.")
 
