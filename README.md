@@ -1,17 +1,25 @@
-# Super League Frontend
+# P2P File Sharing 
 
 ## Manual
 
-Step 1: Make sure you run the [Backend](https://github.com/Xi162/Super-League-Backend) first by following the instruction.
-
-Step 2: Install Node packages
+Step 1: Run the executable server at <SERVER_IP> (with fixed port 5124)
 
 ```
-$ yarn
+$ ./server
+``` 
+
+Step 2: Run the peer servers (with fixed ports 8500, 8501, 8502)
+
+```
+$ ./peer --server <SERVER_IP>
+or 
+$ ./peer -s <SERVER_IP>
 ```
 
-Step 3: Run the project on an appropriate port (this project doesn't required .env). Make sure that the API_URL in the `src/config.ts` file is the correct URL to the backend:
+Step 2: Run the client
 
 ```
-$ yarn dev
+$ ./client --server <SERVER_IP>
+or 
+$ ./client -s <SERVER_IP>
 ```
