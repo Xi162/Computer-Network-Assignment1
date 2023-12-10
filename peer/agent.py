@@ -25,16 +25,19 @@ def agent():
     agent.bind(("", constants.AGENT_PORT))
     print("Agent listen on port", constants.AGENT_PORT)
     while True:
+        print("here")
         message, mainServerAddress = agent.recvfrom(1024)
         if mainServerAddress[0] == constants.SERVER_IP:
             message = json.loads(message.decode())
             if message["type"] == "ping":
+                print("Ping from server, count: ", get_fcount())
                 response = {
                     "type": "pong",
                     "fcount": get_fcount()
                 }
             elif message["type"] == "discover":
                 res = get_file_list()
+                print("Discovered from server", res)
                 response = {
                     "type": "discover",
                     "list": res

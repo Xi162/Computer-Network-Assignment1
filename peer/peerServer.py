@@ -1,4 +1,5 @@
 import socketserver
+import mimetypes
 import sqlite3
 import json
 import os
@@ -34,17 +35,28 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             try:
                 filepath = read_file_path(reqObj["fname"])
 
-                with open(filepath, "r") as file:
-                    file_content = file.read(1024)
-                    
-                res = {
+                print("Sending file: ", filepath)
+
+                # Sent header
+                header = {
                     "code": 0,
-                    "data": file_content
+                    "type": mimetypes.guess_type(filepath),
+                    "length": os.path.getsize(filepath),
                 }
-                response = bytes(json.dumps(res), 'utf-8')
-                self.request.sendall(response)
+
+                print("Header: ", header)
+                header = bytes(json.dumps(header), 'utf-8')
+                self.request.sendall(header)
+
+                # Sent data streams
+                with open(filepath, "rb") as file:
+                    file_bytes = file.read(1024)
+                    while file_bytes:
+                        self.request.sendall(file_bytes)
+                        file_bytes = file.read(1024)
 
             except FileNotFoundError as e:
+                print('Error: ', e)
                 delete_file(reqObj["fname"])
                 response = {
                     "code": 1,

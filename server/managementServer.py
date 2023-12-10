@@ -11,6 +11,14 @@ def get_hosts():
     res = list(map(lambda obj: obj[0], res))
     return res
 
+def get_hosts_info():
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("SELECT * FROM hosts")
+    res = res.fetchall()
+    res = list(map(lambda obj: (obj[0], obj[1]), res))
+    return res
+
 def update_online(host):
     con = sqlite3.connect("server.db")
     cur = con.cursor()
@@ -23,7 +31,7 @@ def update_offline(host):
     cur = con.cursor()
     cur.execute("UPDATE hosts SET online = FALSE WHERE ip = ?", (host,))
     con.commit()
-    cur.execute("DELETE FROM file_hosts WHERE host = ?", (host,))
+    cur.execute("DELETE FROM file_host WHERE host = ?", (host,))
     con.commit()
     con.close()
 

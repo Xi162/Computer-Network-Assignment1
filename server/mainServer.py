@@ -71,6 +71,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         reqObj = json.loads(req)
         response = None
         # publish resolve
+        print('type ', reqObj["type"])
         if reqObj["type"] == "publish":
             try:
                 hosts = get_host_from_file(reqObj["fname"])
@@ -142,10 +143,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             }
             try:
                 if len(get_file_host(reqObj["fname"], reqObj["host"])) > 0:
-                    list = discover.discover_host(reqObj["host"])
-                    if reqObj["fname"] not in list:
+                    print('a')
+                    list_file = discover.discover_host(reqObj["host"])
+                    if reqObj["fname"] not in list_file:
+                        print('b')
                         delete_file_host(reqObj["host"], reqObj["fname"])
-            except:
+            except Exception as e:
                 pingCount = ping.ping_host(reqObj["host"])
                 if pingCount < 8:
                     # do something
