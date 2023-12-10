@@ -32,4 +32,6 @@ def publish(fname, lname):
     elif res["code"] == 2:
         raise SyntaxError(res["data"])
     elif res["code"] == 3:
-        print("File exists, can not publish")
+        raise Exception("File exists, can not publish")
+    elif res["code"] == 4:
+        raise Exception(res["data"])

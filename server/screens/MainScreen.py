@@ -49,7 +49,7 @@ class MainScreen(tk.Frame):
         self.peer_entry.configure(width=20)
         self.peer_entry.grid(row=0,column=0,pady=8)
 
-        tk.Button(add_peer_container, text="Add Peer", command=self.add_peer).grid(row=0,column=1,pady=10, padx=10)
+        tk.Button(add_peer_container, text="Add Peer", command=self.add_host).grid(row=0,column=1,pady=10, padx=10)
 
         # Peer actions
         label = tk.Label(self, text="Choose a peer", font=("Arial", 18))
@@ -63,10 +63,15 @@ class MainScreen(tk.Frame):
         tk.Button(button_container, text="Discover", command=self.discover).grid(row=0,column=1,pady=10, padx=10)
         tk.Button(button_container, text="Refresh", command=self.fetch_peers).grid(row=0,column=2,pady=10, padx=10)
 
-    def add_peer(self):
-        hostname = self.peer_entry.get()
-        print('Add peer', hostname)
-        pass
+    def add_host(self):
+        ip = self.peer_entry.get()
+        if ip == "":
+            messagebox.showerror("Error", "Hostname cannot be empty")
+            return
+
+        self.controller.client.add_host(ip)
+        self.peer_entry.delete(0, tk.END)
+        self.fetch_peers() 
 
     def start_screen(self):
         self.fetch_peers()
@@ -78,8 +83,8 @@ class MainScreen(tk.Frame):
         list_file = self.controller.client.fetch_peers()
         list_file = list_file == None and [] or list_file
 
-        for file in list_file:
-            self.file_listbox.insert(tk.END, file)
+        for (ip, online) in list_file:
+            self.file_listbox.insert(tk.END, ip + " - " + ("Online" if online else "Offline"))
 
     def ping(self):
         selected_index = self.file_listbox.curselection()
@@ -87,7 +92,9 @@ class MainScreen(tk.Frame):
         if not selected_index:
             return
 
-        hostname = self.file_listbox.get(selected_index) 
+        text = self.file_listbox.get(selected_index) 
+
+        hostname = text.split("-")[0].strip()
 
         ping_count = self.controller.client.ping(hostname)
 
@@ -109,7 +116,9 @@ class MainScreen(tk.Frame):
         if not selected_index:
             return
 
-        hostname = self.file_listbox.get(selected_index)
+        text = self.file_listbox.get(selected_index) 
+
+        hostname = text.split("-")[0].strip()   
 
         list_file = self.controller.client.discover(hostname)
 

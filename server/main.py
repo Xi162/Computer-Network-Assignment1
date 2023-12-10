@@ -24,7 +24,6 @@ class Server:
         cur = con.cursor()
         cur.execute("""CREATE TABLE IF NOT EXISTS hosts(
                     ip text,
-                    hostname text, 
                     online boolean  default(FALSE), 
                     primary key(ip));""")
         con.commit()
@@ -49,9 +48,9 @@ class Server:
         self.NMP_server_thread.daemon = True
         self.NMP_server_thread.start()
 
-    def add_host(self, hostname, ip):
+    def add_host(self, ip):
         try:
-            add_host.add_cmd(hostname, ip)
+            add_host.add_host(ip)
         except socket.error as e:
             print("[Server Error] ", *e.args)
         except Exception as e:
@@ -59,7 +58,7 @@ class Server:
 
     def fetch_peers(self):
         try:
-            list_file = mainServer.get_peer_list()
+            list_file = managementServer.get_hosts_info()
             if list_file == None:
                 return []
 
@@ -96,9 +95,6 @@ class Server:
     def stop(self):
         self.server.shutdown()
         self.server_thread.join()
-
-        self.NMP_server.shutdown()
-        self.NMP_server_thread.join()
 
         if os.path.exists("server.db"):
             os.remove("server.db")

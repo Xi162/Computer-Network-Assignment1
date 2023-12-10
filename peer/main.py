@@ -31,8 +31,7 @@ class Peer:
         con.close()
 
         #ping server for the main server to ping
-        self.close_event = threading.Event()
-        self.agent_server_thread = threading.Thread(target=agent.agent, args=(self.close_event,))
+        self.agent_server_thread = threading.Thread(target=agent.agent)
         self.agent_server_thread.daemon = True
         self.agent_server_thread.start()
 
@@ -41,6 +40,9 @@ class Peer:
         self.peer_server_thread = threading.Thread(target=self.peer_server.serve_forever)
         self.peer_server_thread.daemon = True
         self.peer_server_thread.start()
+
+        #connect to the main server
+        connect.connect()
 
     def fetch(self, name):
         fetch.fetch(fname)
@@ -58,15 +60,15 @@ class Peer:
             return []
 
     def fetch_local_list(self):
-        con = sqlite3.connect("peer.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)                                      
-        cur = con.cursor()
-        res = cur.execute("SELECT * FROM file_path")
-        return res.fetchall()
+        list_file = agent.get_file_list()
+        if list_file is None:
+            return []
+        return list_file
 
     def stop(self):
         self.peer_server.shutdown()
         self.peer_server_thread.join()
-        self.close_event.set()
+        disconnect.disconnect()
 
 if __name__ == "__main__":
     peer = Peer()

@@ -123,8 +123,7 @@ class Client:
 
                 client_socket.close()
                 return
-            except (ConnectionError, TimeoutError, socket.error) as e:
-                print("here")
+            except (ConnectionError, TimeoutError) as e:
                 client_socket.close()
                 connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 connectionSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
