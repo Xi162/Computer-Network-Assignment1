@@ -165,7 +165,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             }
             if pingCount < 8:
                 # do something
-                managementServer.update_offline(reqObj["host"])
+                update_offline(reqObj["host"])
         # invalid_host_file resolve
         elif reqObj["type"] == "invalid_host_file":
             # we do not use this response, just add for consistency
@@ -184,7 +184,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 pingCount = ping.ping_host(reqObj["host"])
                 if pingCount < 8:
                     # do something
-                    managementServer.update_offline(reqObj["host"])
+                    update_offline(reqObj["host"])
         elif reqObj["type"] == "connect":
             print(peerAddress, get_hosts())
             if peerAddress[0] in get_hosts():

@@ -2,15 +2,9 @@ import socket
 import constants
 import json
 
-<<<<<<< HEAD
-def connect():
-    connectSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    connectSocket.settimeout(2)
-=======
 def connect(SERVER_IP):
     connectSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connectSocket.settimeout(5)
->>>>>>> 00a6296fa1507a096b43d19d3e35488ef26175d6
     req = {
         "type": "connect"
     }
