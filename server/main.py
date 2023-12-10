@@ -12,7 +12,6 @@ import constants
 import ping
 import discover
 import add_host
-import managementServer
 
 HOST, PORT = "", 5124
 class Server:
@@ -43,11 +42,6 @@ class Server:
         self.server_thread.daemon = True
         self.server_thread.start()
 
-        self.NMP_server = managementServer.NMP_server(constants.NMP_PORT)
-        self.NMP_server_thread = threading.Thread(target=self.NMP_server.start)
-        self.NMP_server_thread.daemon = True
-        self.NMP_server_thread.start()
-
     def add_host(self, ip):
         try:
             add_host.add_host(ip)
@@ -58,7 +52,7 @@ class Server:
 
     def fetch_peers(self):
         try:
-            list_file = managementServer.get_hosts_info()
+            list_file = mainServer.get_hosts_info()
             if list_file == None:
                 return []
 

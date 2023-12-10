@@ -1,11 +1,15 @@
 from GUI import GUI
 from client import Client
+import argparse
 
-SERVER_IP =  "192.168.1.2"
 SERVER_PORT = 5124
 PEER_PORT = 8500
 
 if __name__ == "__main__":
-    client = Client(SERVER_IP, SERVER_PORT, PEER_PORT)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--server", type=str, default='localhost', help="Specify the port number")
+    args = parser.parse_args()
+
+    client = Client(args.server, SERVER_PORT, PEER_PORT)
     gui = GUI(client)
     gui.start()

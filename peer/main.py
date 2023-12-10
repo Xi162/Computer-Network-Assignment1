@@ -13,9 +13,15 @@ from GUI import GUI
 import agent
 import connect
 import disconnect
+import sys
 
 class Peer:
-    def __init__(self):
+    def __init__(self, SERVER_IP):
+        self.SERVER_IP = SERVER_IP
+        #connect to the main server
+        if not connect.connect(self.SERVER_IP):
+            sys.exit(0)
+
         #create a local repo, which stores local path and fname
         # if os.path.exists("peer.db"):
         #     os.remove("peer.db")
@@ -31,7 +37,7 @@ class Peer:
         con.close()
 
         #ping server for the main server to ping
-        self.agent_server_thread = threading.Thread(target=agent.agent)
+        self.agent_server_thread = threading.Thread(target=agent.agent, args=(self.SERVER_IP,))
         self.agent_server_thread.daemon = True
         self.agent_server_thread.start()
 
@@ -41,16 +47,10 @@ class Peer:
         self.peer_server_thread.daemon = True
         self.peer_server_thread.start()
 
-        #connect to the main server
-        connect.connect()
-
-    def fetch(self, name):
-        fetch.fetch(fname)
-
     def publish(self, fname, path):
         try:
             print("publishing", fname, path)
-            publish.publish(fname, path)
+            publish.publish(self.SERVER_IP, fname, path)
         except socket.error as e:
             print("[Server Error] ", *e.args)
             return []
@@ -60,7 +60,12 @@ class Peer:
             return []
 
     def fetch_local_list(self):
-        list_file = agent.get_file_list()
+        con = sqlite3.connect("peer.db")
+        cur = con.cursor()
+        
+        list_file = cur.execute("SELECT * FROM file_path")
+        list_file = list_file.fetchall()
+        list_file = list(map(lambda obj: (obj[0], obj[1]), list_file))
         if list_file is None:
             return []
         return list_file
@@ -68,9 +73,14 @@ class Peer:
     def stop(self):
         self.peer_server.shutdown()
         self.peer_server_thread.join()
-        disconnect.disconnect()
+        disconnect.disconnect(self.SERVER_IP)
 
 if __name__ == "__main__":
-    peer = Peer()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--server", type=str, default='localhost', help="Specify the port number")
+    args = parser.parse_args()
+
+    peer = Peer(args.server)
     gui = GUI(peer)
     gui.start()
+
