@@ -96,10 +96,10 @@ class Server:
         self.server.shutdown()
         self.server_thread.join()
 
-        if os.path.exists("server.db"):
-            os.remove("server.db")
-        else:
-            print("The file does not exist")
+        # if os.path.exists("server.db"):
+        #     os.remove("server.db")
+        # else:
+        #     print("The file does not exist")
 
 
 if __name__ == "__main__":
