@@ -16,16 +16,15 @@ def ping_host(host):
             response = json.loads(response.decode())
             if response["type"] == "pong":
                 resCount = resCount + 1
-                print("Reponse received " + str(resCount) + ": File count " + str(response["fcount"]))
         except Exception as e:
             print(e)
-            print("Ping failed #", i+1)
             continue
     
     return resCount
 
 def ping_cmd(args):
-    ping_host(args.host)
+    pingCount = ping_host(args.host)
+    print("Number of messages received: "+ str(pingCount) + "/10")
             
 # print(ping_host("192.168.1.217"))
     
