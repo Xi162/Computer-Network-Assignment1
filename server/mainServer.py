@@ -4,7 +4,17 @@ import json
 import datetime
 import ping
 import discover
+import managementServer
 
+def get_online_hosts():
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("SELECT * FROM hosts WHERE online = TRUE")
+    res = res.fetchall()
+    res = list(map(lambda obj: obj[0], res))
+    con.close()
+    return res
+    
 def insert_file_host(host, file):
     con = sqlite3.connect("server.db")
     cur = con.cursor()
@@ -12,7 +22,7 @@ def insert_file_host(host, file):
     con.commit()
     con.close()
     
-def get_host(file):
+def get_host_from_file(file):
     con = sqlite3.connect("server.db")
     cur = con.cursor()
     res = cur.execute("SELECT host FROM file_host WHERE file=?", (file,))
@@ -39,13 +49,13 @@ def list_files():
     con.close()
     return res
 
-def delete_host(host):
-    con = sqlite3.connect("server.db")
-    cur = con.cursor()
-    res = cur.execute("DELETE FROM file_host WHERE host=?", (host,))
-    con.commit()
-    con.close()
-    return res
+# def delete_host(host):
+#     con = sqlite3.connect("server.db")
+#     cur = con.cursor()
+#     res = cur.execute("DELETE FROM file_host WHERE host=?", (host,))
+#     con.commit()
+#     con.close()
+#     return res
 
 def get_file_host(file, host):
     con = sqlite3.connect("server.db")
@@ -55,17 +65,6 @@ def get_file_host(file, host):
     con.close()
     return res
 
-def get_peer_list():
-    con = sqlite3.connect("server.db")
-    cur = con.cursor()
-    res = cur.execute("SELECT host FROM file_host")
-    res = res.fetchall()
-    res = set(map(lambda obj: obj[0], res))
-    res = list(res)
-    con.close()
-    return res
-
-
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         req = str(self.request.recv(1024), 'utf8')
@@ -74,18 +73,24 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # publish resolve
         if reqObj["type"] == "publish":
             try:
-                hosts = get_host(reqObj["fname"])
+                hosts = get_host_from_file(reqObj["fname"])
                 if len(hosts) > 0:
                     response = {
                         "code": 3,
                         "data": "File exists"
                     }
                 else:
-                    insert_file_host(self.client_address[0], reqObj["fname"])
-                    response = {
-                        "code": 0,
-                        "data": "File {} has been recorded".format(reqObj["fname"])
-                    }
+                    if self.client_address[0] in get_online_hosts():
+                        insert_file_host(self.client_address[0], reqObj["fname"])
+                        response = {
+                            "code": 0,
+                            "data": "File {} has been recorded".format(reqObj["fname"])
+                        }
+                    else:
+                        response = {
+                            "code": 4,
+                            "data": "Unauthorized"
+                        }
             except:
                 response = {
                     "code": 1,
@@ -107,7 +112,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # fetch resolve
         elif reqObj["type"] == "fetch":
             try:
-                response = get_host(reqObj["fname"])
+                response = get_host_from_file(reqObj["fname"])
                 response = {
                     "code": 0,
                     "data": response
@@ -127,7 +132,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             }
             if pingCount < 8:
                 # do something
-                delete_host(reqObj["host"])
+                managementServer.update_offline(reqObj["host"])
         # invalid_host_file resolve
         elif reqObj["type"] == "invalid_host_file":
             # we do not use this response, just add for consistency
@@ -144,7 +149,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 pingCount = ping.ping_host(reqObj["host"])
                 if pingCount < 8:
                     # do something
-                    delete_host(reqObj["host"])
+                    managementServer.update_offline(reqObj["host"])
         else:
             response = {
                 "code": 2,

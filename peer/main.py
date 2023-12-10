@@ -11,6 +11,8 @@ import socket
 import peerServer
 from GUI import GUI
 import agent
+import connect
+import disconnect
 
 class Peer:
     def __init__(self):

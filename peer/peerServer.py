@@ -23,7 +23,6 @@ def read_file_path(fname):
 def delete_file(fname):
     con = sqlite3.connect("peer.db")
     cur = con.cursor()
-
     cur.execute("DELETE FROM file_path WHERE fname = ?", (fname,))
     con.commit()
     con.close()

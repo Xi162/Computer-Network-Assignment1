@@ -13,7 +13,6 @@ def discover_host(host):
         discoverSocket.sendall(bytes(reqJSON, "utf-8"))
         res = discoverSocket.recv(1024)
         res = res.decode()
-        print(res)
         res = json.loads(res)
         return res["list"]
     except ConnectionError:
@@ -24,7 +23,8 @@ def discover_host(host):
         raise TimeoutError("Request timed out")
         
 def discover_cmd(args):
-    discover_host(args.host)
+    list_file = discover_host(args.host)
+    map(lambda file: print(file), list_file)
 
 
 # discover("192.168.1.217")
