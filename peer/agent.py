@@ -20,14 +20,14 @@ def get_file_list():
     res = list(map(lambda obj: obj[0], res))
     return res
 
-def agent():
+def agent(SERVER_IP):
     agent = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     agent.bind(("", constants.AGENT_PORT))
     print("Agent listen on port", constants.AGENT_PORT)
     while True:
         print("here")
         message, mainServerAddress = agent.recvfrom(1024)
-        if mainServerAddress[0] == constants.SERVER_IP:
+        if mainServerAddress[0] == SERVER_IP:
             message = json.loads(message.decode())
             if message["type"] == "ping":
                 print("Ping from server, count: ", get_fcount())

@@ -10,10 +10,10 @@ def insert_repo(fname, path):
     con.commit()
     con.close()
 
-def publish(fname, lname):
+def publish(SERVER_IP, fname, lname):
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientSocket.settimeout(5)
-    clientSocket.connect((constants.SERVER_IP, constants.SERVER_PORT))
+    clientSocket.connect((SERVER_IP, constants.SERVER_PORT))
     req = {
         "type": "publish",
         "fname": fname

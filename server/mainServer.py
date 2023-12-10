@@ -4,7 +4,6 @@ import json
 import datetime
 import ping
 import discover
-import managementServer
 
 def get_online_hosts():
     con = sqlite3.connect("server.db")
@@ -49,6 +48,38 @@ def list_files():
     con.close()
     return res
 
+def get_hosts():
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("SELECT * FROM hosts")
+    res = res.fetchall()
+    res = list(map(lambda obj: obj[0], res))
+    return res
+
+def get_hosts_info():
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    res = cur.execute("SELECT * FROM hosts")
+    res = res.fetchall()
+    res = list(map(lambda obj: (obj[0], obj[1]), res))
+    return res
+
+def update_online(host):
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    cur.execute("UPDATE hosts SET online = TRUE WHERE ip = ?", (host,))
+    con.commit()
+    con.close()
+
+def update_offline(host):
+    con = sqlite3.connect("server.db")
+    cur = con.cursor()
+    cur.execute("UPDATE hosts SET online = FALSE WHERE ip = ?", (host,))
+    con.commit()
+    cur.execute("DELETE FROM file_host WHERE host = ?", (host,))
+    con.commit()
+    con.close()
+
 # def delete_host(host):
 #     con = sqlite3.connect("server.db")
 #     cur = con.cursor()
@@ -71,7 +102,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         reqObj = json.loads(req)
         response = None
         # publish resolve
-        print('type ', reqObj["type"])
+        print('type', reqObj["type"])
+        peerAddress = self.client_address
         if reqObj["type"] == "publish":
             try:
                 hosts = get_host_from_file(reqObj["fname"])
@@ -153,6 +185,44 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 if pingCount < 8:
                     # do something
                     managementServer.update_offline(reqObj["host"])
+        elif reqObj["type"] == "connect":
+            print(peerAddress, get_hosts())
+            if peerAddress[0] in get_hosts():
+                try:
+                    update_online(peerAddress[0])
+                    response = {
+                        "type": "Connected",
+                        "data": "Update online success"
+                    }
+                except Exception as e:
+                    response = {
+                        "type": "Error",
+                        "data": "Server Error"
+                    }
+                    print(e)
+            else:
+                response = {
+                    "type": "Error",
+                    "data": "Unauthorized"
+                }
+        elif reqObj["type"] == "disconnect":
+            if peerAddress[0] in get_hosts():
+                try:
+                    update_offline(peerAddress[0])
+                    response = {
+                        "code": "Disconnected",
+                        "data": "Update offline success"
+                    }
+                except:
+                    response = {
+                        "type": "Error",
+                        "data": "Server Error"
+                    }
+            else:
+                response = {
+                    "type": "Error",
+                    "data": "Unauthorized"
+                }
         else:
             response = {
                 "code": 2,

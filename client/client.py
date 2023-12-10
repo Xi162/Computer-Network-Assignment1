@@ -3,6 +3,7 @@ import json
 import os
 import base64
 import io
+import sys
 from pathlib import Path
 
 class Client:
