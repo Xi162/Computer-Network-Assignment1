@@ -12,9 +12,9 @@ def disconnect(SERVER_IP):
     try:
         connectSocket.connect((SERVER_IP, constants.SERVER_PORT))
         connectSocket.sendall(reqJSON)
-        response, serverAddress = connectSocket.recvfrom(1024)
+        response = connectSocket.recv(1024)
         response = json.loads(response.decode())
-        if(response["type"] == "Disconnected"):
+        if(response["code"] == 0):
             print("Disconnected from server")
         else:
             raise Exception(response["data"])

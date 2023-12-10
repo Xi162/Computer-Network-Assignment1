@@ -47,15 +47,6 @@ class Peer:
         self.peer_server_thread.daemon = True
         self.peer_server_thread.start()
 
-<<<<<<< HEAD
-        #connect to the main server
-        connect.connect()
-
-    def fetch(self, fname):
-        fetch.fetch(fname)
-
-=======
->>>>>>> 00a6296fa1507a096b43d19d3e35488ef26175d6
     def publish(self, fname, path):
         try:
             print("publishing", fname, path)

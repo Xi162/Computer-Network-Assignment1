@@ -12,9 +12,9 @@ def connect(SERVER_IP):
     try:
         connectSocket.connect((SERVER_IP, constants.SERVER_PORT))
         connectSocket.sendall(reqJSON)
-        response, serverAddress = connectSocket.recvfrom(1024)
+        response = connectSocket.recv(1024)
         response = json.loads(response.decode())
-        if(response["type"] == "Connected"):
+        if(response["code"] == 0):
             print("Connected to server")
         else:
             raise Exception(response["data"])

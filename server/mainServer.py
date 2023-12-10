@@ -191,18 +191,18 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 try:
                     update_online(peerAddress[0])
                     response = {
-                        "type": "Connected",
+                        "code": 0,
                         "data": "Update online success"
                     }
                 except Exception as e:
                     response = {
-                        "type": "Error",
+                        "code": 1,
                         "data": "Server Error"
                     }
                     print(e)
             else:
                 response = {
-                    "type": "Error",
+                    "code": 4,
                     "data": "Unauthorized"
                 }
         elif reqObj["type"] == "disconnect":
@@ -210,17 +210,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 try:
                     update_offline(peerAddress[0])
                     response = {
-                        "code": "Disconnected",
+                        "code": 0,
                         "data": "Update offline success"
                     }
                 except:
                     response = {
-                        "type": "Error",
+                        "type": 1,
                         "data": "Server Error"
                     }
             else:
                 response = {
-                    "type": "Error",
+                    "type": 4,
                     "data": "Unauthorized"
                 }
         else:
