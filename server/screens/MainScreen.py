@@ -61,7 +61,8 @@ class MainScreen(tk.Frame):
 
         tk.Button(button_container, text="Ping", command=self.ping).grid(row=0, column=0,pady=10, padx=10)
         tk.Button(button_container, text="Discover", command=self.discover).grid(row=0,column=1,pady=10, padx=10)
-        tk.Button(button_container, text="Refresh", command=self.fetch_peers).grid(row=0,column=2,pady=10, padx=10)
+        tk.Button(button_container, text="Delete", command=self.delete_host).grid(row=0,column=2,pady=10, padx=10)
+        tk.Button(button_container, text="Refresh", command=self.fetch_peers).grid(row=0,column=3,pady=10, padx=10)
 
     def add_host(self):
         ip = self.peer_entry.get()
@@ -70,6 +71,18 @@ class MainScreen(tk.Frame):
             return
 
         self.controller.client.add_host(ip)
+        self.peer_entry.delete(0, tk.END)
+        self.fetch_peers() 
+    
+    def delete_host(self):
+        selected_index = self.file_listbox.curselection()
+
+        if not selected_index:
+            return
+
+        text = self.file_listbox.get(selected_index) 
+        ip = text.split("-")[0].strip()
+        self.controller.client.delete_host(ip)
         self.peer_entry.delete(0, tk.END)
         self.fetch_peers() 
 

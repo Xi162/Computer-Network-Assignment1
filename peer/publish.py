@@ -24,9 +24,9 @@ def publish(SERVER_IP, fname, lname):
     res = res.decode()
     res = json.loads(res)
     clientSocket.close()
-    print(res)
     if res["code"] == 0:
         insert_repo(fname, lname)
+        print(res["data"])
     elif res["code"] == 1:
         raise RuntimeError(res["data"])
     elif res["code"] == 2:

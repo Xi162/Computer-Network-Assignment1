@@ -56,7 +56,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         file_bytes = file.read(1024)
 
             except FileNotFoundError as e:
-                print('Error: ', e)
                 delete_file(reqObj["fname"])
                 response = {
                     "code": 1,
@@ -66,7 +65,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 self.request.sendall(response)
             except Exception as e:
                 response = {
-                    "code": 2,
+                    "code": 1,
                     "data": "Peer Error"
                 }
                 response = bytes(json.dumps(response), 'utf-8')

@@ -41,7 +41,7 @@ class MainScreen(tk.Frame):
         download_button = tk.Button(self, text="Publish", command=self.open_popup)
         download_button.pack(pady=10, padx=10)
 
-        tk.Button(self, text="Refresh", command=lambda: self.fetch_local_list).pack(pady=10, padx=10)
+        tk.Button(self, text="Refresh", command= self.fetch_local_list).pack(pady=10, padx=10)
 
     def start_screen(self):
         self.fetch_local_list()
@@ -54,7 +54,7 @@ class MainScreen(tk.Frame):
         list_file = list_file == None and [] or list_file
 
         for (fname, location) in list_file:
-            self.file_listbox.insert(tk.END, fname + '\t' + location)
+            self.file_listbox.insert(tk.END, fname + "   " + location)
 
     def publish(self, fname):
         location = filedialog.askopenfilename()

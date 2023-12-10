@@ -69,6 +69,8 @@ def update_online(host):
     cur = con.cursor()
     cur.execute("UPDATE hosts SET online = TRUE WHERE ip = ?", (host,))
     con.commit()
+    cur.execute("DELETE FROM file_host WHERE host = ?", (host,))
+    con.commit()
     con.close()
 
 def update_offline(host):
@@ -100,9 +102,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         req = str(self.request.recv(1024), 'utf8')
         reqObj = json.loads(req)
+        print(req, self.client_address[0])
         response = None
         # publish resolve
-        print('type', reqObj["type"])
         peerAddress = self.client_address
         if reqObj["type"] == "publish":
             try:
@@ -175,10 +177,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             }
             try:
                 if len(get_file_host(reqObj["fname"], reqObj["host"])) > 0:
-                    print('a')
                     list_file = discover.discover_host(reqObj["host"])
                     if reqObj["fname"] not in list_file:
-                        print('b')
                         delete_file_host(reqObj["host"], reqObj["fname"])
             except Exception as e:
                 pingCount = ping.ping_host(reqObj["host"])
@@ -186,7 +186,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     # do something
                     update_offline(reqObj["host"])
         elif reqObj["type"] == "connect":
-            print(peerAddress, get_hosts())
             if peerAddress[0] in get_hosts():
                 try:
                     update_online(peerAddress[0])
@@ -199,7 +198,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         "code": 1,
                         "data": "Server Error"
                     }
-                    print(e)
             else:
                 response = {
                     "code": 4,
@@ -215,12 +213,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     }
                 except:
                     response = {
-                        "type": 1,
+                        "code": 1,
                         "data": "Server Error"
                     }
             else:
                 response = {
-                    "type": 4,
+                    "code": 4,
                     "data": "Unauthorized"
                 }
         else:
@@ -228,6 +226,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 "code": 2,
                 "data": "Bad request"
             }
+        print(response)
         response = json.dumps(response)
         response = bytes(response, 'utf8')
         self.request.sendall(response)

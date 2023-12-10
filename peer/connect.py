@@ -21,6 +21,5 @@ def connect(SERVER_IP):
         return True
     except Exception as e:
         print("Can not connect to server")
-        print(e)
         return False
     

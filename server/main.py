@@ -12,6 +12,7 @@ import constants
 import ping
 import discover
 import add_host
+import delete_host
 
 HOST, PORT = "", 5124
 class Server:
@@ -45,10 +46,14 @@ class Server:
     def add_host(self, ip):
         try:
             add_host.add_host(ip)
-        except socket.error as e:
-            print("[Server Error] ", *e.args)
         except Exception as e:
-            print('[Client Error]', *e.args)
+            print('[Server Error]', *e.args)
+            
+    def delete_host(self, ip):
+        try:
+            delete_host.delete_host(ip)
+        except Exception as e:
+            print('[Server Error]', *e.args)
 
     def fetch_peers(self):
         try:

@@ -17,7 +17,6 @@ def ping_host(host):
             if response["type"] == "pong":
                 resCount = resCount + 1
         except Exception as e:
-            print(e)
             continue
     
     return resCount
