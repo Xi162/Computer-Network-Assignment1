@@ -4,7 +4,7 @@ import json
 
 def connect():
     connectSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    connectSocket.settimeout(5)
+    connectSocket.settimeout(2)
     req = {
         "type": "connect"
     }

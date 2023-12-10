@@ -44,7 +44,7 @@ class Peer:
         #connect to the main server
         connect.connect()
 
-    def fetch(self, name):
+    def fetch(self, fname):
         fetch.fetch(fname)
 
     def publish(self, fname, path):
