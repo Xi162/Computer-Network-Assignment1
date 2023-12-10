@@ -14,6 +14,7 @@ def disconnect(SERVER_IP):
         connectSocket.sendall(reqJSON)
         response = connectSocket.recv(1024)
         response = json.loads(response.decode())
+        connectSocket.close()
         if(response["code"] == 0):
             print("Disconnected from server")
         else:

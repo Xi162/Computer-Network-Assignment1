@@ -124,8 +124,7 @@ class Client:
 
                 client_socket.close()
                 return
-            except (ConnectionError, TimeoutError) as e:
-                client_socket.close()
+            except (ConnectionError, TimeoutError) as e:  
                 connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 connectionSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
                 req = {
@@ -137,7 +136,6 @@ class Client:
                 connectionSocket.close()
                 print("[Peer error] ", *e.args)
             except FileNotFoundError as e:
-                client_socket.close()
                 fileNotFoundSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 fileNotFoundSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
                 req = {
