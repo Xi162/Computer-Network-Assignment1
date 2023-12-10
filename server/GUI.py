@@ -25,7 +25,7 @@ class GUI:
         # Show screen
         self.show_screen("MainScreen")
 
-        self.root.geometry("816x600")
+        self.root.geometry("816x700")
         self.root.mainloop()
 
     def show_screen(self, screen_name):

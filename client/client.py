@@ -91,6 +91,7 @@ class Client:
                 client_socket.sendall(bytes(reqJSON, "utf-8"))
                 header = client_socket.recv(1024)
                 header = header.decode()
+                print(header)
                 header = json.loads(header)
                 if header["code"] == 1:
                     raise FileNotFoundError(header["data"])

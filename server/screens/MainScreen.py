@@ -38,15 +38,35 @@ class MainScreen(tk.Frame):
         # Print to log space
         sys.stdout = RedirectedText(self.log_space, sys.stdout)
 
+        # Add peer
+        tk.Label(self, text="Choose a peer", font=("Arial", 18)).pack(pady=8,fill=tk.X)
+
+        add_peer_container = tk.Frame(self)
+        add_peer_container.configure(width=50)
+        add_peer_container.pack(expand=True, padx=10, pady=10)
+        
+        self.peer_entry = tk.Entry(add_peer_container)
+        self.peer_entry.configure(width=20)
+        self.peer_entry.grid(row=0,column=0,pady=8)
+
+        tk.Button(add_peer_container, text="Add Peer", command=self.add_peer).grid(row=0,column=1,pady=10, padx=10)
+
+        # Peer actions
         label = tk.Label(self, text="Choose a peer", font=("Arial", 18))
         label.pack(pady=8,fill=tk.X)
 
         button_container = tk.Frame(self)
-        button_container.pack(pady=20,fill=tk.X)
+        button_container.configure(width=50)
+        button_container.pack(pady=20)
 
-        tk.Button(button_container, text="Ping", command=self.ping).pack(pady=10, padx=10)
-        tk.Button(button_container, text="Discover", command=self.discover).pack(pady=10, padx=10)
-        tk.Button(button_container, text="Refresh", command=self.fetch_peers).pack(pady=10, padx=10)
+        tk.Button(button_container, text="Ping", command=self.ping).grid(row=0, column=0,pady=10, padx=10)
+        tk.Button(button_container, text="Discover", command=self.discover).grid(row=0,column=1,pady=10, padx=10)
+        tk.Button(button_container, text="Refresh", command=self.fetch_peers).grid(row=0,column=2,pady=10, padx=10)
+
+    def add_peer(self):
+        hostname = self.peer_entry.get()
+        print('Add peer', hostname)
+        pass
 
     def start_screen(self):
         self.fetch_peers()

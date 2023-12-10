@@ -65,7 +65,6 @@ class Peer:
         self.peer_server.shutdown()
         self.peer_server_thread.join()
         self.close_event.set()
-        self.agent_server_thread.join()
 
 if __name__ == "__main__":
     peer = Peer()
