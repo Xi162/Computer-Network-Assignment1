@@ -4,7 +4,7 @@ import json
 
 def disconnect(SERVER_IP):
     connectSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connectSocket.settimeout(2)
+    connectSocket.settimeout(1)
     req = {
         "type": "disconnect"
     }

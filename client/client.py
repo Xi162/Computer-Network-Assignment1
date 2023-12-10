@@ -16,7 +16,7 @@ class Client:
         try:
             print("Fetching list...")
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.settimeout(5)
+            client_socket.settimeout(10)
             req = {
                 "type": "list"
             }
@@ -59,7 +59,7 @@ class Client:
 
     def get_ips(self, filename):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.settimeout(5)
+        client_socket.settimeout(10)
         client_socket.connect((self.SERVER_HOST, self.SERVER_PORT))
         req = {
             "type": "fetch",

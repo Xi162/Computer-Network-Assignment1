@@ -12,7 +12,7 @@ def insert_repo(fname, path):
 
 def publish(SERVER_IP, fname, lname):
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    clientSocket.settimeout(5)
+    clientSocket.settimeout(10)
     clientSocket.connect((SERVER_IP, constants.SERVER_PORT))
     req = {
         "type": "publish",
