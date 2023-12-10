@@ -2,7 +2,6 @@
 */.venv/
 */build/
 */dist/
-connect.py
 heartbeat.py
 *.db
 file.txt

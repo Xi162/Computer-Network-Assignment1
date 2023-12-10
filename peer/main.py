@@ -9,9 +9,12 @@ import publish
 import constants
 import peerServer
 import agent
+import connect
+import disconnect
 
 #just to exit the program
 def prog_exit(args):
+    disconnect.disconnect()
     sys.exit(0)
 
 #create a local repo, which stores local path and fname
@@ -60,6 +63,8 @@ if __name__ == "__main__":
     agent_server_thread.start()
     peer_server_thread.start()
     print("Peer server listen on port", constants.PEER_PORT)
+    
+    connect.connect()
 
     while True:
         user_input = input("> ")
