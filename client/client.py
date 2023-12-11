@@ -77,11 +77,13 @@ class Client:
 
     def load_file(self, ips, filename, save_location):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.settimeout(10)
         req = {
             "type": "load",
             "fname": filename
         }
-        client_socket.settimeout(1)
+        delimiter = b"\r\n\r\n"
+
         for ip in ips:
             if os.path.exists(save_location):
                 os.remove(save_location)
@@ -90,9 +92,10 @@ class Client:
                 client_socket.connect((ip, self.PEER_PORT))
                 reqJSON = json.dumps(req)
                 client_socket.sendall(bytes(reqJSON, "utf-8"))
-                header = client_socket.recv(1024)
+                res = b''
+                res = client_socket.recv(1024)
+                header, binary_content = res.split(delimiter, 1)
                 header = header.decode()
-                print(header)
                 header = json.loads(header)
                 if header["code"] == 1:
                     raise FileNotFoundError(header["data"])
@@ -101,12 +104,14 @@ class Client:
                 elif header["code"] == 0:
                     file_length = header["length"]
                     file_length = int(file_length)
-                    file_content=b''
 
                     # For tracking purposes
                     current_file_length=0
 
                     with open(save_location, "wb") as file:
+                        if binary_content:
+                            file.write(binary_content)
+                            current_file_length += len(binary_content)
                         file_stream = client_socket.recv(1024)
                         while file_stream:
                             current_file_length += len(file_stream)
@@ -149,6 +154,7 @@ class Client:
                 print("[Peer error] ", *e.args)
             except RuntimeError as e:
                 print("[Peer error] ", *e.args)
+        client_socket.close()
         print("No peer available.")
 
     def shutdown(self):
