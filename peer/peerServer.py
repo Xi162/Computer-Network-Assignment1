@@ -1,5 +1,4 @@
 import socketserver
-import mimetypes
 import sqlite3
 import json
 import os
@@ -11,6 +10,7 @@ def read_file_path(fname):
     res = cur.execute("SELECT * FROM file_path WHERE fname = ?", (fname,))
     path = res.fetchone()
     con.close()
+    print('debug ', path)
     if not path:
         raise FileNotFoundError("File is no longer on server")
     elif not path[1]:
@@ -40,7 +40,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # Sent header
                 header = {
                     "code": 0,
-                    "type": mimetypes.guess_type(filepath),
                     "length": os.path.getsize(filepath),
                 }
 
