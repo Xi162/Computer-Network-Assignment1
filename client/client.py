@@ -94,7 +94,9 @@ class Client:
                 client_socket.sendall(bytes(reqJSON, "utf-8"))
                 res = b''
                 res = client_socket.recv(1024)
-                header, binary_content = res.split(delimiter, 1)
+                res_list = res.split(delimiter, 1)
+                header = res_list[0]
+                binary_content = len(res_list) > 1 and res_list[1] or b''
                 header = header.decode()
                 header = json.loads(header)
                 if header["code"] == 1:
@@ -151,6 +153,17 @@ class Client:
                 reqJSON = json.dumps(req)
                 fileNotFoundSocket.sendall(bytes(reqJSON, "utf-8"))
                 fileNotFoundSocket.close()
+                print("[Peer error] ", *e.args)
+            except socket.error as e:  
+                connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                connectionSocket.connect((self.SERVER_HOST, self.SERVER_PORT))
+                req = {
+                    "type": "invalid_host",
+                    "host": ip
+                }
+                reqJSON = json.dumps(req)
+                connectionSocket.sendall(bytes(reqJSON, "utf-8"))
+                connectionSocket.close()
                 print("[Peer error] ", *e.args)
             except RuntimeError as e:
                 print("[Peer error] ", *e.args)
