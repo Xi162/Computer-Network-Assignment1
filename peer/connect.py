@@ -10,17 +10,17 @@ def connect(SERVER_IP):
     }
     reqJSON = bytes(json.dumps(req), "utf-8")
     try:
-        connectSocket.connect((SERVER_IP, constants.SERVER_PORT))
+        connectSocket.connect((SERVER_IP, constants.OT_PORT))
         connectSocket.sendall(reqJSON)
         response = connectSocket.recv(1024)
         response = json.loads(response.decode())
-        connectSocket.close()
         if(response["code"] == 0):
             print("Connected to server")
         else:
             raise Exception(response["data"])
-        return True
+        return connectSocket
     except Exception as e:
         print("Can not connect to server")
-        return False
+        print(e)
+        return None
     

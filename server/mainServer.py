@@ -48,14 +48,6 @@ def list_files():
     con.close()
     return res
 
-def get_hosts():
-    con = sqlite3.connect("server.db")
-    cur = con.cursor()
-    res = cur.execute("SELECT * FROM hosts")
-    res = res.fetchall()
-    res = list(map(lambda obj: obj[0], res))
-    return res
-
 def get_hosts_info():
     con = sqlite3.connect("server.db")
     cur = con.cursor()
@@ -105,7 +97,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         print(req, self.client_address[0])
         response = None
         # publish resolve
-        peerAddress = self.client_address
         if reqObj["type"] == "publish":
             try:
                 hosts = get_host_from_file(reqObj["fname"])
@@ -185,42 +176,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 if pingCount < 8:
                     # do something
                     update_offline(reqObj["host"])
-        elif reqObj["type"] == "connect":
-            if peerAddress[0] in get_hosts():
-                try:
-                    update_online(peerAddress[0])
-                    response = {
-                        "code": 0,
-                        "data": "Update online success"
-                    }
-                except Exception as e:
-                    response = {
-                        "code": 1,
-                        "data": "Server Error"
-                    }
-            else:
-                response = {
-                    "code": 4,
-                    "data": "Unauthorized"
-                }
-        elif reqObj["type"] == "disconnect":
-            if peerAddress[0] in get_hosts():
-                try:
-                    update_offline(peerAddress[0])
-                    response = {
-                        "code": 0,
-                        "data": "Update offline success"
-                    }
-                except:
-                    response = {
-                        "code": 1,
-                        "data": "Server Error"
-                    }
-            else:
-                response = {
-                    "code": 4,
-                    "data": "Unauthorized"
-                }
         else:
             response = {
                 "code": 2,

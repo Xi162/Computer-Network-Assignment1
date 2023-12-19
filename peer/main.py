@@ -14,12 +14,14 @@ import agent
 import connect
 import disconnect
 import sys
+import heartbeat
 
 class Peer:
     def __init__(self, SERVER_IP):
         self.SERVER_IP = SERVER_IP
         #connect to the main server
-        if not connect.connect(self.SERVER_IP):
+        self.connectionSocket = connect.connect(self.SERVER_IP)
+        if not self.connectionSocket:
             sys.exit(0)
 
         #create a local repo, which stores local path and fname
@@ -46,6 +48,10 @@ class Peer:
         self.peer_server_thread = threading.Thread(target=self.peer_server.serve_forever)
         self.peer_server_thread.daemon = True
         self.peer_server_thread.start()
+        
+        self.heartbeat_thread = threading.Thread(target=heartbeat.send_heartbeat, args=(self.connectionSocket,))
+        self.heartbeat_thread.daemon = True
+        self.heartbeat_thread.start()
 
     def publish(self, fname, path):
         try:
@@ -73,7 +79,7 @@ class Peer:
     def stop(self):
         self.peer_server.shutdown()
         self.peer_server_thread.join()
-        disconnect.disconnect(self.SERVER_IP)
+        disconnect.disconnect(self.connectionSocket)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

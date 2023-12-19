@@ -1,6 +1,7 @@
 import threading
 import sqlite3
 import mainServer
+import onlineTrackingServer
 import os
 import time
 from GUI import GUI
@@ -42,6 +43,12 @@ class Server:
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
+        
+        #initialize heartbeat server and server thread
+        self.ot_server = onlineTrackingServer.ThreadedTCPServer((HOST, constants.OT_PORT), onlineTrackingServer.ThreadedTCPRequestHandler)
+        self.ot_server_thread = threading.Thread(target=self.ot_server.serve_forever)
+        self.ot_server_thread.daemon = True
+        self.ot_server_thread.start()
 
     def add_host(self, ip):
         try:
