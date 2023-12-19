@@ -5,6 +5,7 @@ import constants
 
 def send_heartbeat(connectSocket):
     while True:
+        try:
             req = {
                 "type": "heartbeat"
             }
@@ -12,4 +13,7 @@ def send_heartbeat(connectSocket):
             connectSocket.sendall(bytes(reqJSON, "utf8"))
             res = str(connectSocket.recv(1024), 'utf8')
             print(res)
+        except:
+            pass
+        finally:
             time.sleep(5.0)
